@@ -24,6 +24,9 @@ router.get("/me", protect, getMe);
 
 router.post("/logout", logoutUser);
 
+router.get("/test", (req, res) => {
+    res.send("Auth route working!");
+});
 
 
 module.exports = router;
