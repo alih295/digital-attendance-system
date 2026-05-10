@@ -7,8 +7,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-  origin: "https://digital-attendance-system-dfmjm84jv-alih295s-projects.vercel.app", // Aapka frontend URL
-  credentials: true
+  origin: "https://digital-attendance-system-dfmjm84jv-alih295s-projects.vercel.app", // Aapka frontend link
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 

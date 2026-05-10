@@ -1,11 +1,9 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://192.168.100.67:3000/api', 
-  withCredentials: true // <--- Sabse important line
+  // Purana localhost wala link hata kar naya Vercel link dalein
+  baseURL: "https://digital-attendance-system-5acs.vercel.app/api", 
+  withCredentials: true // Ye cookies ke liye lazmi hai
 });
-
-// Yeh line extra surety ke liye add karein
-API.defaults.withCredentials = true;
 
 export default API;
