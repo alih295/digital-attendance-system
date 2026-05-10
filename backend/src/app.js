@@ -1,20 +1,16 @@
-const express = require("express");
-const cookieParser = require("cookie-parser");
-const cors = require("cors");
-
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const app = express();
 
-
-
-
-// middlewares
 app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-  origin: true, // Deploy ke baad hum yahan exact Vercel link daal denge
+  origin: "https://digital-attendance-system-dfmjm84jv-alih295s-projects.vercel.app", // Aapka frontend URL
   credentials: true
 }));
+
 
 // routes
 const authRoutes = require("./Routes/auth.route");
