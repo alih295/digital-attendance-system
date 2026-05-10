@@ -1,23 +1,18 @@
 const app = require('./src/app');
 const connecttoDb = require('./src/config/db/db');
-const env = require('dotenv');
+require('dotenv').config();
 
-env.config();
-
-// DNS setting local debugging ke liye theek hai, 
-// lekin Vercel par iski zaroorat nahi hoti.
-const dns = require('dns');
-dns.setServers(['1.1.1.1', '8.8.8.8']);
-
-// Connect to Database
+// Database connection
 connecttoDb();
 
-// Local testing ke liye ye rehne dein
+// Port handle karna Vercel ke liye zaroori nahi hota lekin local ke liye theek hai
+const PORT = process.env.PORT || 3000;
+
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(3000, '0.0.0.0', () => {
-        console.log('Server is running locally on port 3000');
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
     });
 }
 
-// Vercel ke liye ye sabse important line hai
+// SABSE ZAROORI LINE
 module.exports = app;
