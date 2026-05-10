@@ -59,12 +59,15 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "1d" },
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false, // MUST be false for local testing over HTTP
-      sameSite: "lax", // 'none' requires secure: true, so use 'lax' for local IP
-      path: "/",
-    });
+   res.cookie("token", token, {
+    httpOnly: true,
+    // Production (Vercel) par 'true' hona chahiye, local par 'false'
+    secure: process.env.NODE_ENV === "production", 
+    // Production par 'none' hona chahiye cross-domain ke liye, local par 'lax'
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours (optional but recommended)
+});
 
     return res.json({
       message: "Login successful",
