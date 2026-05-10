@@ -5,6 +5,9 @@ require('dotenv').config();
 // Database connection
 connecttoDb();
 
+
+
+module.exports = app;
 // Port handle karna Vercel ke liye zaroori nahi hota lekin local ke liye theek hai
 const PORT = process.env.PORT || 3000;
 
@@ -15,4 +18,3 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // SABSE ZAROORI LINE
-module.exports = app;
