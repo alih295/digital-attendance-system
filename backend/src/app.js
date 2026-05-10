@@ -8,8 +8,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin:
-      "https://digital-attendance-system-dfmjm84jv-alih295s-projects.vercel.app", // Aapka frontend link
+    origin: "https://digital-attendance-system-nine.vercel.app/", 
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
