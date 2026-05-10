@@ -1,6 +1,9 @@
 const Session = require("../models/session.model");
-const { v4: uuidv4 } = require("uuid");
+const uuid = require("uuid"); // Pura module require karein
+const uuidv4 = uuid.v4; // v4 ko yahan extract karein
 const QRCode = require("qrcode");
+
+// Baqi code waisa hi rehne dein...
 
 // START CLASS
 exports.startSession = async (req, res) => {
@@ -35,7 +38,6 @@ exports.startSession = async (req, res) => {
       qrImage,
       expiresAt,
     });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -68,7 +70,6 @@ exports.refreshQR = async (req, res) => {
     const qrImage = await QRCode.toDataURL(qrData);
 
     res.json({ qrImage, expiresAt });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
