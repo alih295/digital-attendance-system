@@ -1,9 +1,5 @@
 import axios from "axios";
-
-const API = axios.create({
-  baseURL: "http://localhost:3000/api/admin",
-  withCredentials: true,
-});
+import API from '../api/api'
 
 // ============================
 // DASHBOARD STATS

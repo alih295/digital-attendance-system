@@ -4,22 +4,16 @@ import { useAuth } from "../context/AuthProvider";
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user, loading } = useAuth();
 
-  // 🔥 BLOCK ROUTING UNTIL AUTH CHECK FINISHES
-  if (loading) {
-    return <div className="flex h-screen items-center justify-center">
-      Loading...
-    </div>;
-  }
+  if (loading) return null; // AuthProvider handle kar raha hai, but safety first
 
   if (!user) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
-  if (user.role !== allowedRole) {
-    return <Navigate to="/" />;
+  // Role check (lowercase taake case sensitivity ka masla na ho)
+  if (user.role.toLowerCase() !== allowedRole.toLowerCase()) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
-
-export default ProtectedRoute;
