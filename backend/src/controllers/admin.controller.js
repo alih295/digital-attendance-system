@@ -144,7 +144,6 @@ exports.assignTeacher = async (req, res) => {
       message: "Teacher assigned successfully",
       course,
     });
-
   } catch (err) {
     res.status(500).json({
       message: err.message,

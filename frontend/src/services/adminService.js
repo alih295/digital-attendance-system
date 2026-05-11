@@ -4,7 +4,7 @@ import API from '../api/api'
 
 
 export const getStats = async () => {
-  const response = await API.get("/stats");
+  const response = await API.get("/admin/stats");
 
   return response.data;
 };
