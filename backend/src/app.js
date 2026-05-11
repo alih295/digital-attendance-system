@@ -7,8 +7,14 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// Determine frontend URL based on environment
+const frontendURL = process.env.FRONTEND_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://digital-attendance-system-5acs.vercel.app'
+    : 'http://localhost:5173');
+
 app.use(cors({
-  origin: "https://digital-attendance-system-nine.vercel.app", 
+  origin: frontendURL, 
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
