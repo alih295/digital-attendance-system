@@ -5,7 +5,8 @@ import Login from "../pages/Login";
 import StudentDashboard from "../pages/StudentDashboard";
 import TeacherDashboard from "../pages/TeacherDashboard";
 import AdminDashboard from "../pages/AdminDashboard";
-import ProtectedRoute from "./ProtectedRoute";
+import ProtectedRoute from './ProtectedRoute'
+
 
 const AppRoutes = () => {
   const { user, loading } = useAuth(); // Context se data lein
@@ -39,7 +40,7 @@ const AppRoutes = () => {
         <Route
           path="/student-dashboard"
           element={
-            <ProtectedRoute allowedRole="student">
+            <ProtectedRoute allowedRole="student" >
               <StudentDashboard />
             </ProtectedRoute>
           }

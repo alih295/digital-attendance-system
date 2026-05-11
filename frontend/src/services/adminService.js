@@ -1,9 +1,7 @@
 import axios from "axios";
 import API from '../api/api'
 
-// ============================
-// DASHBOARD STATS
-// ============================
+
 
 export const getStats = async () => {
   const response = await API.get("/stats");
