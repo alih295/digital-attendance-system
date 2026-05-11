@@ -5,22 +5,24 @@ require('dotenv').config();
 const startServer = async () => {
     try {
         await connectDB();
-        console.log("MongoDB Connected...");
+        console.log("✅ MongoDB Connected Successfully");
     } catch (err) {
-        console.error("DB Connection Failed:", err);
+        console.error("❌ DB Connection Failed:", err.message);
+        // Don't crash the server - Vercel needs it to respond
+        process.exitCode = 1;
     }
 };
 
-// Initial connection call
+// Connect to database on startup
 startServer();
 
-// Yeh line Vercel ke liye sabse zaroori hai
+// Export for Vercel serverless
 module.exports = app;
 
-// Local development ke liye
+// Local development server
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
 }

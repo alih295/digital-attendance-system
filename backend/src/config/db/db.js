@@ -1,4 +1,3 @@
-// Example of a database connection utility
 import mongoose from 'mongoose';
 
 let cached = global.mongoose;
@@ -11,8 +10,26 @@ async function connectDB() {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGO_URI).then((m) => m);
+    const mongoUri = process.env.MONGO_URI;
+    
+    if (!mongoUri) {
+      throw new Error('MONGO_URI environment variable is not set');
+    }
+
+    cached.promise = mongoose.connect(mongoUri, {
+      connectTimeoutMS: 30000,  // Increased for serverless
+      socketTimeoutMS: 30000,
+      serverSelectionTimeoutMS: 10000,
+      maxPoolSize: 5,           // Reduce for serverless
+      minPoolSize: 1,
+      retryWrites: true,
+      retryReads: true,
+    }).catch((err) => {
+      cached.promise = null;
+      throw err;
+    });
   }
+
   cached.conn = await cached.promise;
   return cached.conn;
 }
