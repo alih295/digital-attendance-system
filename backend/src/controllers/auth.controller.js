@@ -43,15 +43,23 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log("📧 Login attempt:", { email, receivedPassword: password ? "YES" : "NO" });
+
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("❌ User not found:", email);
       return res.status(400).json({ message: "Invalid email" });
     }
 
+    console.log("✅ User found:", user.email);
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log("❌ Password mismatch");
       return res.status(400).json({ message: "Invalid password" });
     }
+
+    console.log("✅ Password match!");
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -61,12 +69,10 @@ exports.loginUser = async (req, res) => {
 
    res.cookie("token", token, {
     httpOnly: true,
-    // Production (Vercel) par 'true' hona chahiye, local par 'false'
     secure: process.env.NODE_ENV === "production", 
-    // Production par 'none' hona chahiye cross-domain ke liye, local par 'lax'
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     path: "/",
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours (optional but recommended)
+    maxAge: 24 * 60 * 60 * 1000
 });
 
     return res.json({
@@ -78,6 +84,7 @@ exports.loginUser = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("❌ Login error:", err.message);
     res.status(500).json({ message: err.message });
   }
 };

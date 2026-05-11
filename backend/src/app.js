@@ -13,6 +13,12 @@ const frontendURL = process.env.FRONTEND_URL ||
     ? 'https://digital-attendance-system-5acs.vercel.app'
     : 'http://localhost:5173');
 
+console.log("🔧 Environment Setup:");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("Frontend URL:", frontendURL);
+console.log("MONGO_URI:", process.env.MONGO_URI ? "✅ Set" : "❌ Missing");
+console.log("JWT_SECRET:", process.env.JWT_SECRET ? "✅ Set" : "❌ Missing");
+
 app.use(cors({
   origin: frontendURL, 
   credentials: true,
