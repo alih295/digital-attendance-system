@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const dbConnectMiddleware = require("./middlewares/dbConnect.middleware");
 const app = express();
 
 app.use(express.json());
@@ -12,6 +13,9 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Database Connection Middleware - MUST be before routes
+app.use(dbConnectMiddleware);
 
 // routes
 const authRoutes = require("./Routes/auth.route");
