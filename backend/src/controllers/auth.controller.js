@@ -43,19 +43,15 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-  
-
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid email" });
     }
 
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
-
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -63,12 +59,13 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "1d" },
     );
 
-   // Backend (authController.js ya jahan cookie set ho rahi hai)
-res.cookie('token', token, {
-    httpOnly: true,
-    secure: true,      // Hugging Face HTTPS use karta hai, ye TRUE hona chahiye
-    sameSite: 'none',  // Cross-site requests ke liye ye lazmi hai
-});
+    // Backend (authController.js ya jahan cookie set ho rahi hai)
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true, // HTTPS ke liye zaroori
+      sameSite: "none", // Cross-site (HF Frontend to HF Backend) ke liye zaroori
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
     return res.json({
       message: "Login successful",
