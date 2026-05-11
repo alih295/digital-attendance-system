@@ -20,7 +20,7 @@ console.log("MONGO_URI:", process.env.MONGO_URI ? "✅ Set" : "❌ Missing");
 console.log("JWT_SECRET:", process.env.JWT_SECRET ? "✅ Set" : "❌ Missing");
 
 app.use(cors({
-  origin: frontendURL, 
+  origin: 'https://digital-attendance-system-nine.vercel.app', 
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
