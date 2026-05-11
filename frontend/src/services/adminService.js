@@ -15,7 +15,7 @@ export const getStats = async () => {
 
 export const createDepartment = async (data) => {
   const response = await API.post(
-    "/department",
+    "/admin/department",
     data
   );
 
@@ -28,7 +28,7 @@ export const createDepartment = async (data) => {
 
 export const createCourse = async (data) => {
   const response = await API.post(
-    "/course",
+    "/admin/course",
     data
   );
 
@@ -41,7 +41,7 @@ export const createCourse = async (data) => {
 
 export const createUser = async (data) => {
   const response = await API.post(
-    "/user",
+    "/admin/user",
     data
   );
 
@@ -54,7 +54,7 @@ export const createUser = async (data) => {
 
 export const getDepartments = async () => {
   const response = await API.get(
-    "/departments"
+    "/admin/departments"
   );
 
   return response.data;
@@ -66,7 +66,7 @@ export const getDepartments = async () => {
 
 export const getTeachers = async () => {
   const response = await API.get(
-    "/teachers"
+    "/admin/teachers"
   );
 
   return response.data;
@@ -78,7 +78,7 @@ export const getTeachers = async () => {
 
 export const getCourses = async () => {
   const response = await API.get(
-    "/courses"
+    "/admin/courses"
   );
 
   return response.data;
@@ -86,7 +86,7 @@ export const getCourses = async () => {
 
 export const assignTeacher = async (data) => {
   const response = await API.post(
-    "/assign-teacher",
+    "/admin/assign-teacher",
     data
   );
 
