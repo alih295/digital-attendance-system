@@ -43,23 +43,19 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log("📧 Login attempt:", { email, receivedPassword: password ? "YES" : "NO" });
+  
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("❌ User not found:", email);
       return res.status(400).json({ message: "Invalid email" });
     }
 
-    console.log("✅ User found:", user.email);
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("❌ Password mismatch");
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    console.log("✅ Password match!");
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -67,12 +63,11 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "1d" },
     );
 
-   res.cookie("token", token, {
+   // Backend (authController.js ya jahan cookie set ho rahi hai)
+res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", 
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-    maxAge: 24 * 60 * 60 * 1000
+    secure: true,      // Hugging Face HTTPS use karta hai, ye TRUE hona chahiye
+    sameSite: 'none',  // Cross-site requests ke liye ye lazmi hai
 });
 
     return res.json({
