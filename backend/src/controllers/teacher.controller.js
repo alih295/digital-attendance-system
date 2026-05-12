@@ -34,24 +34,20 @@ exports.startSession = async (req, res) => {
   try {
     const { courseId } = req.params;
 
-    // close old active sessions
-    await Session.updateMany(
-      {
-        courseId,
-        isActive: true,
-      },
-      {
-        isActive: false,
-      },
-    );
+    // Purani sessions close karein
+    await Session.updateMany({ courseId, isActive: true }, { isActive: false });
 
     const qrToken = Math.random().toString(36).substring(2, 12);
+    
+    // ⏰ Expiry time set karein (e.g., 30 minutes from now)
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); 
 
     const session = await Session.create({
       courseId,
-      teacherId: req.user.id,
+      teacherId: req.user._id, // Ensure your middleware uses ._id or .id consistently
       qrToken,
       isActive: true,
+      expiresAt, // Ye add karna zaroori hai
     });
 
     res.status(201).json({
@@ -59,11 +55,7 @@ exports.startSession = async (req, res) => {
       session,
     });
   } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      message: err.message,
-    });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -106,19 +98,16 @@ exports.endSession = async (req, res) => {
 exports.getSessionAttendance = async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const attendance = await Attendance.find({ sessionId })
+      .populate("studentId", "name email regNo") // regNo bhi populate karein agar user model mein hai
+      .sort({ markedAt: -1 });
 
-    const attendance = await Attendance.find({
-      sessionId,
-    })
-      .populate("studentId", "name email")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json(attendance);
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      message: err.message,
+    res.status(200).json({
+      success: true,
+      count: attendance.length,
+      data: attendance
     });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
