@@ -1,5 +1,7 @@
 import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { logoutUser } from "../services/authService";
 
 import {
   getStats,
@@ -13,6 +15,7 @@ import {
 } from "../services/adminService";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ---------------- STATES ----------------
@@ -146,6 +149,18 @@ export default function AdminDashboard() {
     }
   };
 
+
+ const handleLogout = async () => {
+    try {
+      await logoutUser();
+      navigate("/");
+    } catch (err) {
+      console.log("Logout Error:", err);
+    }
+  };
+
+
+
   // ---------------- ASSIGN TEACHER ----------------
   const handleAssign = async () => {
     try {
@@ -211,7 +226,7 @@ export default function AdminDashboard() {
           </nav>
         </div>
 
-        <button className="bg-red-500 py-3 rounded-xl font-semibold">
+        <button onClick={handleLogout} className="bg-red-500 cursor-pointer py-3 rounded-xl font-semibold">
           Logout
         </button>
       </div>

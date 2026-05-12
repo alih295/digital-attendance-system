@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getMyCourses,
   startSession,
   endSession,
   getSessionAttendance,
 } from "../services/teacherService";
+import {logoutUser} from '../services/authService'
 
 import { QRCodeCanvas } from "qrcode.react";
 import { useAuth } from "../context/AuthProvider";
 
 export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [courses, setCourses] = useState([]);
@@ -33,6 +36,15 @@ export default function TeacherDashboard() {
   useEffect(() => {
     fetchCourses();
   }, []);
+
+   const handleLogout = async () => {
+    try {
+      await logoutUser();
+      navigate("/");
+    } catch (err) {
+      console.log("Logout Error:", err);
+    }
+  };
 
   const handleStartSession = async (course) => {
     try {
@@ -119,7 +131,7 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        <button className="bg-red-500 py-3 rounded-xl font-semibold mt-6">
+        <button onClick={handleLogout} className="bg-red-500 py-3 rounded-xl font-semibold cursor-pointer mt-6">
           Logout
         </button>
       </div>

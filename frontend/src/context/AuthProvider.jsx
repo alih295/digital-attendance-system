@@ -21,12 +21,17 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  const logout = () => {
+    setUser(null);
+  };
+
   useEffect(() => {
     fetchUser();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, fetchUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, fetchUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
