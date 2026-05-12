@@ -49,27 +49,23 @@ export default function StudentDashboard() {
   }, [fetchUser, fetchAttendance]);
 
   // 3. QR Scan Handling Logic
-  const handleScan = async (sessionId) => {
-    if (!sessionId) return;
+// 3. QR Scan Handling Logic
+const handleScan = async (scannedData) => {
+  if (!scannedData) return;
 
-    try {
-      // API call to mark attendance
-      const response = await API.post("/attendance/mark", { sessionId });
+  // Maan lein QR ka data "ID|TOKEN" format mein hai
+  const [sId, sToken] = scannedData.split("|"); 
 
-      if (response.data.success) {
-        alert("Attendance Marked Successfully! 🎉");
-        setScannerOpen(false);
-        // Data refresh karein taake dashboard update ho jaye
-        fetchAttendance();
-      }
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || "Failed to mark attendance";
-      alert(errorMsg);
-      setScannerOpen(false);
-    }
-  };
-
-  // 4. Logout Function
+  try {
+    const response = await API.post("/attendance/mark", { 
+      sessionId: sId, 
+      token: sToken 
+    });
+    // ... rest of your success logic
+  } catch (err) {
+    // ... error handling
+  }
+}; // 4. Logout Function
   const handleLogout = async () => {
     try {
       await logoutUser();
