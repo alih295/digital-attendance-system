@@ -13,7 +13,7 @@ import { useAuth } from "../context/AuthProvider";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [courses, setCourses] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
@@ -40,6 +40,7 @@ export default function TeacherDashboard() {
    const handleLogout = async () => {
     try {
       await logoutUser();
+      logout();
       navigate("/");
     } catch (err) {
       console.log("Logout Error:", err);

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Menu, X, LogOut, CheckCircle, Clock, BookOpen, QrCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthProvider";
 
 // Services aur API (Aapne jo pehle bataye)
 import { getMe, logoutUser } from "../services/authService";
@@ -9,6 +10,7 @@ import QRScanner from "../components/QRScanner";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // States
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -71,6 +73,7 @@ export default function StudentDashboard() {
   const handleLogout = async () => {
     try {
       await logoutUser();
+      logout();
       navigate("/");
     } catch (err) {
       console.log("Logout Error:", err);

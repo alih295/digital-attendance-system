@@ -2,6 +2,7 @@ import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../services/authService";
+import { useAuth } from "../context/AuthProvider";
 
 import {
   getStats,
@@ -16,6 +17,7 @@ import {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ---------------- STATES ----------------
@@ -153,6 +155,7 @@ export default function AdminDashboard() {
  const handleLogout = async () => {
     try {
       await logoutUser();
+      logout();
       navigate("/");
     } catch (err) {
       console.log("Logout Error:", err);
