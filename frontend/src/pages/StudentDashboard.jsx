@@ -1,5 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
-import { Menu, X, LogOut, CheckCircle, Clock, BookOpen, QrCode } from "lucide-react";
+import {
+  Menu,
+  X,
+  LogOut,
+  CheckCircle,
+  Clock,
+  BookOpen,
+  QrCode,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
 
@@ -49,23 +57,22 @@ export default function StudentDashboard() {
   }, [fetchUser, fetchAttendance]);
 
   // 3. QR Scan Handling Logic
-// 3. QR Scan Handling Logic
-const handleScan = async (scannedData) => {
-  if (!scannedData) return;
+  // 3. QR Scan Handling Logic
+  const handleScan = async (scannedData) => {
+    try {
+      // QR data ko object mein convert karein
+      const qrObj = JSON.parse(scannedData);
 
-  // Maan lein QR ka data "ID|TOKEN" format mein hai
-  const [sId, sToken] = scannedData.split("|"); 
+      const response = await API.post("/attendance/mark", {
+        sessionId: qrObj.sessionId,
+        token: qrObj.token,
+      });
 
-  try {
-    const response = await API.post("/attendance/mark", { 
-      sessionId: sId, 
-      token: sToken 
-    });
-    // ... rest of your success logic
-  } catch (err) {
-    // ... error handling
-  }
-}; // 4. Logout Function
+      alert("Success!");
+    } catch (err) {
+      console.error("Scan Error:", err);
+    }
+  }; // 4. Logout Function
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -107,7 +114,9 @@ const handleScan = async (scannedData) => {
         <div>
           <div className="flex items-center justify-between mb-10">
             <div>
-              <h1 className="text-3xl font-bold tracking-tighter text-white">DAS</h1>
+              <h1 className="text-3xl font-bold tracking-tighter text-white">
+                DAS
+              </h1>
               <p className="text-gray-400 text-xs mt-1 uppercase tracking-widest">
                 Attendance Portal
               </p>
@@ -120,7 +129,11 @@ const handleScan = async (scannedData) => {
           <nav className="space-y-2">
             <NavItem icon={<BookOpen size={20} />} label="Dashboard" active />
             <NavItem icon={<Clock size={20} />} label="History" />
-            <NavItem icon={<QrCode size={20} />} label="Scanner" onClick={() => setScannerOpen(true)} />
+            <NavItem
+              icon={<QrCode size={20} />}
+              label="Scanner"
+              onClick={() => setScannerOpen(true)}
+            />
           </nav>
         </div>
 
@@ -147,21 +160,35 @@ const handleScan = async (scannedData) => {
               <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
                 Hey, {user?.name?.split(" ")[0] || "Student"}!
               </h2>
-              <p className="text-gray-500 font-medium">Keep up the good work. Check your stats.</p>
+              <p className="text-gray-500 font-medium">
+                Keep up the good work. Check your stats.
+              </p>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200 px-6 py-4 rounded-2xl shadow-sm">
-            <p className="text-gray-400 text-xs font-bold uppercase">Registration No</p>
-            <h3 className="text-xl font-bold text-black">{user?.regNo || "N/A"}</h3>
+            <p className="text-gray-400 text-xs font-bold uppercase">
+              Registration No
+            </p>
+            <h3 className="text-xl font-bold text-black">
+              {user?.regNo || "N/A"}
+            </h3>
           </div>
         </header>
 
         {/* Stats Grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          <StatCard title="Total Classes" value={attendance.length} color="bg-blue-600" />
+          <StatCard
+            title="Total Classes"
+            value={attendance.length}
+            color="bg-blue-600"
+          />
           <StatCard title="Attendance %" value="92%" color="bg-green-600" />
-          <StatCard title="Semester" value={user?.semester || 5} color="bg-purple-600" />
+          <StatCard
+            title="Semester"
+            value={user?.semester || 5}
+            color="bg-purple-600"
+          />
         </section>
 
         {/* Scanner Action Card */}
@@ -170,8 +197,13 @@ const handleScan = async (scannedData) => {
             <QrCode size={60} className="text-black" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-2xl font-bold text-gray-900">Scan Attendance</h3>
-            <p className="text-gray-500 mb-6">Scan the QR code displayed by your teacher to mark your presence instantly.</p>
+            <h3 className="text-2xl font-bold text-gray-900">
+              Scan Attendance
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Scan the QR code displayed by your teacher to mark your presence
+              instantly.
+            </p>
             <button
               onClick={() => setScannerOpen(true)}
               className="bg-black text-white px-10 py-4 rounded-2xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-transform"
@@ -183,7 +215,9 @@ const handleScan = async (scannedData) => {
 
         {/* Attendance List Table */}
         <section className="bg-white rounded-[2rem] border border-gray-200 p-6 md:p-8 shadow-sm">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Recent Records</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+            Recent Records
+          </h3>
           <div className="space-y-4">
             {attendance.length > 0 ? (
               attendance.map((item) => (
@@ -196,9 +230,20 @@ const handleScan = async (scannedData) => {
                       <CheckCircle size={20} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-900">{item.courseId?.name || "Course Name"}</h4>
+                      <h4 className="font-bold text-gray-900">
+                        {item.courseId?.name || "Course Name"}
+                      </h4>
                       <p className="text-gray-400 text-sm">
-                        {new Date(item.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} • {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(item.createdAt).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}{" "}
+                        •{" "}
+                        {new Date(item.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   </div>
@@ -222,11 +267,14 @@ const handleScan = async (scannedData) => {
           <div className="bg-white p-6 rounded-[2.5rem] w-full max-w-lg relative overflow-hidden">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Align QR Code</h2>
-              <button onClick={() => setScannerOpen(false)} className="bg-red-50 text-red-500 p-2 rounded-full">
+              <button
+                onClick={() => setScannerOpen(false)}
+                className="bg-red-50 text-red-500 p-2 rounded-full"
+              >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="rounded-3xl overflow-hidden border-4 border-black">
               <QRScanner onScan={handleScan} />
             </div>
@@ -260,7 +308,9 @@ function StatCard({ title, value, color }) {
   return (
     <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
       <div className={`absolute top-0 right-0 w-2 h-full ${color}`} />
-      <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-2">{title}</p>
+      <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-2">
+        {title}
+      </p>
       <h2 className="text-5xl font-black text-gray-900 group-hover:scale-110 transition-transform origin-left">
         {value}
       </h2>
