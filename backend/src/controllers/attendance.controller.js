@@ -83,7 +83,7 @@ exports.getCourseAttendance = async (req, res) => {
 exports.getMyAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find({
-      studentId: req.user._id,
+      studentId: req.user.id,
     }).populate("courseId", "name code");
 
     res.json(attendance);
