@@ -48,19 +48,23 @@ export default function TeacherDashboard() {
   };
 
   const handleStartSession = async (course) => {
-    try {
-      setLoading(true);
+  // ✅ Safe version
+try {
+  const data = await startSession(courseId);
+  const session = data?.session;
 
-      const data = await startSession(course._id);
+  if (!session) {
+    console.error("No session returned");
+    return;
+  }
 
-      setActiveSession(data.session);
-      setSelectedCourse(course);
-      setAttendance([]);
-    } catch (err) {
-      console.log("Start session error:", err);
-    } finally {
-      setLoading(false);
-    }
+  // use session._id, session.qrToken etc.
+  console.log("Session started:", session);
+
+} catch (error) {
+  console.error("Failed to start session:", error.response?.data?.message || error.message);
+  // show error to user in UI
+}
   };
 
   // ---------------- END SESSION ----------------

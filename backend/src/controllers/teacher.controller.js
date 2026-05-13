@@ -42,8 +42,8 @@ exports.startSession = async (req, res) => {
 
     const qrToken = Math.random().toString(36).substring(2, 12);
     
-    // ⏰ Expiry time set karein (e.g., 30 minutes from now)
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); 
+    // ⏰ Expiry time set karein (e.g., 40 minutes from now)
+    const expiresAt = new Date(Date.now() + 40 * 60 * 1000); 
 
     const session = await Session.create({
       courseId,

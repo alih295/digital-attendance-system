@@ -16,18 +16,21 @@ export const getMyCourses = async () => {
 // =========================
 
 export const startSession = async (courseId) => {
-  try{
- console.log(courseId)
-  const response = await API.post(`/teacher/start-session/${courseId}`);
-  console.log(response.data)
-  return response.data;
-  }
-  catch(err){
-    console.log(err.message)
-  }
- 
-};
+  try {
+    const response = await API.post(`/teacher/start-session/${courseId}`);
 
+    // ✅ Guard — check before reading .session
+    if (!response.data || !response.data.session) {
+      throw new Error("Invalid response from server — session missing");
+    }
+
+    return response.data;
+
+  } catch (error) {
+    console.error("Start session error:", error.response?.data || error.message);
+    throw error; // re-throw so UI can handle it
+  }
+};
 // =========================
 // END SESSION
 // =========================

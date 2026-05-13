@@ -59,13 +59,12 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "1d" },
     );
 
-    // Backend (authController.js ya jahan cookie set ho rahi hai)
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true, // HTTPS ke liye zaroori
-      sameSite: "none", // Cross-site (HF Frontend to HF Backend) ke liye zaroori
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+   res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,        // required for HTTPS (both vercel & huggingface use HTTPS)
+  sameSite: "None",    // required for cross-origin cookies
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
 
     return res.json({
       message: "Login successful",
