@@ -32,6 +32,9 @@ exports.getMyCourses = async (req, res) => {
 
 exports.startSession = async (req, res) => {
   try {
+     if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" }); // ✅ safe fallback
+    }
     const { courseId } = req.params;
 
     // Purani sessions close karein
@@ -44,7 +47,7 @@ exports.startSession = async (req, res) => {
 
     const session = await Session.create({
       courseId,
-      teacherId: req.user._id, // Ensure your middleware uses ._id or .id consistently
+      teacherId: req.user.id, // Ensure your middleware uses ._id or .id consistently
       qrToken,
       isActive: true,
       expiresAt, // Ye add karna zaroori hai
