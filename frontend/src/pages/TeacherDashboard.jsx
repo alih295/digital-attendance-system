@@ -47,25 +47,28 @@ export default function TeacherDashboard() {
     }
   };
 
-  const handleStartSession = async (course) => {
-  // ✅ Safe version
-try {
-  const data = await startSession(courseId);
-  const session = data?.session;
+ // ✅ Fixed
+const handleStartSession = async (course) => {
+  try {
+    setLoading(true);
+    
+    const data = await startSession(course._id); // ✅ use course._id not courseId
+    const session = data?.session;
 
-  if (!session) {
-    console.error("No session returned");
-    return;
+    if (!session) {
+      console.error("No session returned");
+      return;
+    }
+
+    setActiveSession(session);       // ✅ set active session for QR display
+    setSelectedCourse(course);       // ✅ set selected course for display
+
+  } catch (error) {
+    console.error("Failed to start session:", error.response?.data?.message || error.message);
+  } finally {
+    setLoading(false);
   }
-
-  // use session._id, session.qrToken etc.
-  console.log("Session started:", session);
-
-} catch (error) {
-  console.error("Failed to start session:", error.response?.data?.message || error.message);
-  // show error to user in UI
-}
-  };
+};
 
   // ---------------- END SESSION ----------------
   const handleEndSession = async () => {
