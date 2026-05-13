@@ -16,8 +16,9 @@ export const getMyCourses = async () => {
 // =========================
 
 export const startSession = async (courseId) => {
+  console.log(courseId)
   const response = await API.post(`/teacher/start-session/${courseId}`);
-
+  console.log(response.data)
   return response.data;
 };
 
