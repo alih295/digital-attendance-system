@@ -12,7 +12,7 @@ exports.markAttendance = async (req, res) => {
     const { sessionId, token } = req.body; 
 
     // 2. Student ki ID hum middleware se le rahe hain (req.user)
-    const studentId = req.user._id; 
+    const studentId = req.user.id; 
 
     const session = await Session.findById(sessionId);
 
