@@ -14,18 +14,64 @@ exports.getDashboardStats = async (req, res) => {
       User.countDocuments({ role: "teacher" }),
       User.countDocuments({ role: "student" }),
     ]);
-
     res.json({ departments, courses, teachers, students });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// ---------------- 2. USER MANAGEMENT (With Search & Populate) ----------------
+// ---------------- 2. DEPARTMENT MANAGEMENT ----------------
+exports.createDepartment = async (req, res) => {
+  try {
+    const { name } = req.body;
+    const exists = await Department.findOne({ name });
+    if (exists) return res.status(400).json({ message: "Department already exists" });
+
+    const dept = await Department.create({ name });
+    res.status(201).json(dept);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getDepartments = async (req, res) => {
+  try {
+    const departments = await Department.find();
+    res.json(departments);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ---------------- 3. COURSE MANAGEMENT ----------------
+exports.createCourse = async (req, res) => {
+  try {
+    const { name, code, departmentId, semester } = req.body;
+    const exists = await Course.findOne({ code });
+    if (exists) return res.status(400).json({ message: "Course code already exists" });
+
+    const course = await Course.create({ name, code, departmentId, semester });
+    res.status(201).json(course);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getCourses = async (req, res) => {
+  try {
+    const courses = await Course.find()
+      .populate("departmentId", "name")
+      .populate("teacherId", "name");
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ---------------- 4. USER MANAGEMENT ----------------
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password, role, departmentId, regNo } = req.body;
-
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "User already exists" });
 
@@ -33,8 +79,16 @@ exports.createUser = async (req, res) => {
     const user = await User.create({
       name, email, password: hashed, role, departmentId, regNo
     });
-
     res.status(201).json({ message: "User created successfully", user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getTeachers = async (req, res) => {
+  try {
+    const teachers = await User.find({ role: "teacher" }).select("-password");
+    res.json(teachers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -51,12 +105,21 @@ exports.getAllStudents = async (req, res) => {
   }
 };
 
-// ---------------- 3. ENROLLMENT MANAGEMENT (Very Important) ----------------
-// Student ko course mein enroll karne ke liye (Attendance tabhi lagegi)
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+    await Enrollment.deleteMany({ studentId: id });
+    res.json({ message: "User and their records deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ---------------- 5. ENROLLMENT & ASSIGNMENT ----------------
 exports.enrollStudent = async (req, res) => {
   try {
     const { studentId, courseId } = req.body;
-
     const alreadyEnrolled = await Enrollment.findOne({ studentId, courseId });
     if (alreadyEnrolled) return res.status(400).json({ message: "Student already enrolled" });
 
@@ -67,7 +130,6 @@ exports.enrollStudent = async (req, res) => {
   }
 };
 
-// ---------------- 4. COURSE & TEACHER ASSIGNMENT ----------------
 exports.assignTeacher = async (req, res) => {
   try {
     const { teacherId, courseId } = req.body;
@@ -84,44 +146,16 @@ exports.assignTeacher = async (req, res) => {
   }
 };
 
-// ---------------- 5. ADVANCED ATTENDANCE REPORTS (Professional) ----------------
-// Kisi bhi specific student ki full attendance report check karna
+// ---------------- 6. REPORTS ----------------
 exports.getStudentAttendanceReport = async (req, res) => {
   try {
     const { studentId } = req.params;
-
     const report = await Attendance.find({ studentId })
       .populate("courseId", "name code")
       .populate("sessionId", "createdAt")
       .sort({ markedAt: -1 });
-
     res.json(report);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};
-
-// ---------------- 6. DELETE LOGIC (For Cleanup) ----------------
-exports.deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await User.findByIdAndDelete(id);
-    // User delete ho to uski enrollments bhi khatam honi chahiye
-    await Enrollment.deleteMany({ studentId: id });
-    res.json({ message: "User and their records deleted" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// ---------------- 7. DEPARTMENT & COURSE LISTS ----------------
-exports.getDepartments = async (req, res) => {
-  res.json(await Department.find());
-};
-
-exports.getCourses = async (req, res) => {
-  const courses = await Course.find()
-    .populate("departmentId", "name")
-    .populate("teacherId", "name");
-  res.json(courses);
 };
