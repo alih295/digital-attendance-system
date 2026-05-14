@@ -1,94 +1,62 @@
-import axios from "axios";
-import API from '../api/api'
-
-
+import API from '../api/api';
 
 export const getStats = async () => {
   const response = await API.get("/admin/stats");
-
   return response.data;
 };
-
-// ============================
-// CREATE DEPARTMENT
-// ============================
 
 export const createDepartment = async (data) => {
-  const response = await API.post(
-    "/admin/department",
-    data
-  );
-
+  const response = await API.post("/admin/department", data);
   return response.data;
 };
-
-// ============================
-// CREATE COURSE
-// ============================
 
 export const createCourse = async (data) => {
-  const response = await API.post(
-    "/admin/course",
-    data
-  );
-
+  const response = await API.post("/admin/course", data);
   return response.data;
 };
-
-// ============================
-// CREATE USER
-// ============================
 
 export const createUser = async (data) => {
-  const response = await API.post(
-    "/admin/user",
-    data
-  );
-
+  const response = await API.post("/admin/user", data);
   return response.data;
 };
-
-// ============================
-// GET DEPARTMENTS
-// ============================
 
 export const getDepartments = async () => {
-  const response = await API.get(
-    "/admin/departments"
-  );
-
+  const response = await API.get("/admin/departments");
   return response.data;
 };
-
-// ============================
-// GET TEACHERS
-// ============================
 
 export const getTeachers = async () => {
-  const response = await API.get(
-    "/admin/teachers"
-  );
-
+  const response = await API.get("/admin/teachers");
   return response.data;
 };
 
-// ============================
-// GET COURSES
-// ============================
+export const getStudents = async () => {
+  const response = await API.get("/admin/students");
+  return response.data;
+};
 
 export const getCourses = async () => {
-  const response = await API.get(
-    "/admin/courses"
-  );
-
+  const response = await API.get("/admin/courses");
   return response.data;
 };
 
 export const assignTeacher = async (data) => {
-  const response = await API.post(
-    "/admin/assign-teacher",
-    data
-  );
+  const response = await API.post("/admin/assign-teacher", data);
+  return response.data;
+};
 
+// 🔥 NEW PROFESSIONAL LOGIC
+export const enrollStudent = async (data) => {
+  const response = await API.post("/admin/enroll", data);
+  return response.data;
+};
+
+export const deleteUser = async (userId) => {
+  const response = await API.delete(`/admin/user/${userId}`);
+  return response.data;
+};
+
+export const getStudentReport = async (studentId) => {
+  const response = await API.get(`/admin/student-report/${studentId}`);
   return response.data;
 };

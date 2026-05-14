@@ -4,34 +4,31 @@ const Enrollment = require("../models/enrollment.model");
 const mongoose = require("mongoose");
 
 // 🎯 1. MARK ATTENDANCE
-
-
 exports.markAttendance = async (req, res) => {
   try {
-    // 1. sessionId aur QR-Token hum QR scan se le rahe hain (req.body)
     const { sessionId, token } = req.body; 
 
-    // 2. Student ki ID hum middleware se le rahe hain (req.user)
-    const studentId = req.user.id; 
+    // ✅ FIX 1: req.user.id vs req.user._id
+    // MongoDB projects mein hamesha _id ya req.user._id use karein safety ke liye
+    const studentId = req.user._id || req.user.id; 
 
     const session = await Session.findById(sessionId);
 
-    // Session validation
     if (!session || !session.isActive) {
-      return res.status(400).json({ message: "Invalid session" });
+      return res.status(400).json({ message: "Invalid or inactive session" });
     }
 
-    // QR Security Token check (Jo teacher ke QR mein hai)
+    // ✅ FIX 2: Expiry logic improvement
+    // Kabhi kabhi server time ka thora farq hota hai, isliye log check karein
+    if (new Date() > new Date(session.expiresAt)) {
+      return res.status(400).json({ message: "QR code has expired" });
+    }
+
     if (session.qrToken !== token) {
       return res.status(400).json({ message: "Invalid QR Code" });
     }
 
-    // Expiry check
-    if (new Date() > session.expiresAt) {
-      return res.status(400).json({ message: "QR expired" });
-    }
-
-    // Enrollment check (Using req.user._id)
+    // Enrollment check
     const isEnrolled = await Enrollment.findOne({
       studentId: studentId,
       courseId: session.courseId,
@@ -48,7 +45,7 @@ exports.markAttendance = async (req, res) => {
     });
 
     if (alreadyMarked) {
-      return res.status(400).json({ message: "Already marked" });
+      return res.status(400).json({ message: "Your attendance is already marked for this session" });
     }
 
     // Create Attendance
@@ -56,6 +53,7 @@ exports.markAttendance = async (req, res) => {
       sessionId,
       studentId: studentId,
       courseId: session.courseId,
+      markedAt: new Date() // ✅ Professional practice: timestamp khud set karein
     });
 
     res.json({ success: true, message: "Attendance marked successfully" });
@@ -71,7 +69,8 @@ exports.getCourseAttendance = async (req, res) => {
     const { courseId } = req.params;
 
     const attendance = await Attendance.find({ courseId })
-      .populate("studentId", "name email");
+      .populate("studentId", "name email regNo") // ✅ regNo bhi add kiya
+      .sort({ markedAt: -1 });
 
     res.json(attendance);
 
@@ -79,11 +78,15 @@ exports.getCourseAttendance = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 // 👨‍🎓 3. STUDENT → MY ATTENDANCE
 exports.getMyAttendance = async (req, res) => {
   try {
+    // ✅ FIX 3: studentId verification
+    const studentId = req.user._id || req.user.id;
+
     const attendance = await Attendance.find({
-      studentId: req.user.id,
+      studentId: studentId,
     }).populate("courseId", "name code");
 
     res.json(attendance);
