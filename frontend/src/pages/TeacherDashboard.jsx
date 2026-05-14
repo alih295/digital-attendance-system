@@ -15,7 +15,7 @@ import { toast } from "react-hot-toast"; // Professional Notifications ke liye
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth()
 
   const [courses, setCourses] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
@@ -39,6 +39,15 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => { initDashboard(); }, []);
+
+
+    const handleLogout = async () => {
+    try {
+      await logoutUser();
+      logout();
+      navigate("/");
+    } catch (err) { toast.error("Logout Error"); }
+  };
 
   // ---------------- SESSION START LOGIC ----------------
   const handleStartSession = async (course) => {
@@ -152,7 +161,7 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        <button onClick={logoutUser} className="w-full bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white py-3 rounded-xl font-bold transition-all mt-6 border border-rose-500/20">
+        <button onClick={()=> handleLogout()} className="w-full bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white py-3 rounded-xl font-bold transition-all mt-6 border border-rose-500/20">
           Logout Session
         </button>
       </aside>

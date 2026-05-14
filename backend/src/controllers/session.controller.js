@@ -7,26 +7,25 @@ const QRCode = require("qrcode");
 // =======================================
 // 1. START SESSION (QR Code Generation)
 // =======================================
-exports.startSession = async (req, res) => {
+// 1. Signature mein 'next' add karein
+exports.startSession = async (req, res, next) => { 
   try {
-    const { courseId } = req.params; // ✅ Using params to match your route
+    const { courseId } = req.params;
 
-    // Pehle se chalne wali sessions ko close karein taake conflict na ho
+    // Purani sessions close karein
     await Session.updateMany({ courseId, isActive: true }, { isActive: false });
 
-    // Unique Token aur Expiry set karein (15 seconds security ke liye)
     const qrToken = uuidv4();
     const expiresAt = new Date(Date.now() + 15 * 1000);
 
     const session = await Session.create({
       courseId,
-      teacherId: req.user.id, // Middleware se user id lein
+      teacherId: req.user.id, 
       qrToken,
       expiresAt,
       isActive: true,
     });
 
-    // QR Data generate karein
     const qrData = JSON.stringify({
       sessionId: session._id,
       token: qrToken,
@@ -34,14 +33,23 @@ exports.startSession = async (req, res) => {
 
     const qrImage = await QRCode.toDataURL(qrData);
 
-    res.status(201).json({
+    // ✅ Success response
+    return res.status(201).json({
       success: true,
       sessionId: session._id,
       qrImage,
       expiresAt,
     });
+
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    // 2. Yahan err.message bhejne ke bajaye direct Error handling middleware ko dein
+    // Ya phir agar manual bhej rahe hain toh 'next' ko as a function handle karein
+    console.error("Session Start Error:", err);
+    
+    res.status(500).json({ 
+      success: false, 
+      message: err.message || "Internal Server Error" 
+    });
   }
 };
 

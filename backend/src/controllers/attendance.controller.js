@@ -6,59 +6,26 @@ const mongoose = require("mongoose");
 // 🎯 1. MARK ATTENDANCE
 exports.markAttendance = async (req, res) => {
   try {
+    console.log("Request Received:", req.body); // Check karein data aa raha hai?
     const { sessionId, token } = req.body; 
+    const studentId = req.user._id;
 
-    // ✅ FIX 1: req.user.id vs req.user._id
-    // MongoDB projects mein hamesha _id ya req.user._id use karein safety ke liye
-    const studentId = req.user._id || req.user.id; 
-
+    console.log("Checking Session...");
     const session = await Session.findById(sessionId);
+    if (!session) { console.log("Session not found"); return res.status(404).json({message: "No session"}); }
 
-    if (!session || !session.isActive) {
-      return res.status(400).json({ message: "Invalid or inactive session" });
-    }
-
-    // ✅ FIX 2: Expiry logic improvement
-    // Kabhi kabhi server time ka thora farq hota hai, isliye log check karein
-    if (new Date() > new Date(session.expiresAt)) {
-      return res.status(400).json({ message: "QR code has expired" });
-    }
-
-    if (session.qrToken !== token) {
-      return res.status(400).json({ message: "Invalid QR Code" });
-    }
-
-    // Enrollment check
-    const isEnrolled = await Enrollment.findOne({
-      studentId: studentId,
-      courseId: session.courseId,
-    });
-
+    console.log("Checking Enrollment...");
+    // Yahan check karein agar crash ho raha hai
+    const isEnrolled = await Enrollment.findOne({ studentId, courseId: session.courseId });
+    
     if (!isEnrolled) {
-      return res.status(403).json({ message: "You are not enrolled in this course" });
+       console.log("Not Enrolled:", studentId, "in", session.courseId);
+       return res.status(403).json({ message: "Not enrolled" });
     }
 
-    // Check if already marked
-    const alreadyMarked = await Attendance.findOne({
-      sessionId,
-      studentId: studentId,
-    });
-
-    if (alreadyMarked) {
-      return res.status(400).json({ message: "Your attendance is already marked for this session" });
-    }
-
-    // Create Attendance
-    await Attendance.create({
-      sessionId,
-      studentId: studentId,
-      courseId: session.courseId,
-      markedAt: new Date() // ✅ Professional practice: timestamp khud set karein
-    });
-
-    res.json({ success: true, message: "Attendance marked successfully" });
-
+    // ... baqi code
   } catch (err) {
+    console.error("CRITICAL ERROR:", err.message); // Logs mein error dikhega
     res.status(500).json({ message: err.message });
   }
 };
