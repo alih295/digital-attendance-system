@@ -15,7 +15,7 @@ import { toast } from "react-hot-toast"; // Professional Notifications ke liye
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuth()
+  const { logout , user} = useAuth()
 
   const [courses, setCourses] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
