@@ -17,7 +17,6 @@ const sessionSchema = new mongoose.Schema({
   },
   endTime: {
     type: Date,
-    // Teacher manual stop bhi kar sakta hai
   },
   isActive: {
     type: Boolean,
@@ -25,21 +24,19 @@ const sessionSchema = new mongoose.Schema({
   },
   qrToken: {
     type: String,
-    required: true, // Iska hona zaroori hai security ke liye
+    required: true,
   },
   expiresAt: {
     type: Date,
     required: true,
-    index: { expires: '0s' } // Optional: MongoDB automatic deletion logic
+    index: { expires: "0s" },
   },
 }, { timestamps: true });
 
-// Pre-save hook: Agar manual expiry nahi di to default 10 min set kar de
-sessionSchema.pre('save', function(next) {
+sessionSchema.pre("save", function () {
   if (!this.expiresAt) {
-    this.expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 Minutes default
+    this.expiresAt = new Date(Date.now() + 10 * 60 * 1000);
   }
-  next();
 });
 
 const Session = mongoose.model("Session", sessionSchema);

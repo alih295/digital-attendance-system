@@ -32,13 +32,11 @@ app.use(dbConnectMiddleware);
 
 // routes
 const authRoutes = require("./Routes/auth.route");
-const sessionRoutes = require("./Routes/session.route");
 const adminRoutes = require("./Routes/admin.route");
 const attendanceRoutes = require("./Routes/attendance.route");
 const enrollmentRoutes = require("./Routes/enrollment.route");
 const teacherRoute = require("./Routes/teacher.route");
 app.use("/api/auth", authRoutes);
-app.use("/api/session", sessionRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/enrollment", enrollmentRoutes);
