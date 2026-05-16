@@ -13,9 +13,6 @@ router.post("/start-session/:courseId", protect, authorizeRoles("teacher"), star
 router.get("/refresh-qr/:sessionId", protect, authorizeRoles("teacher"), refreshQR);
 router.post("/end-session/:sessionId", protect, authorizeRoles("teacher"), endSession);
 router.get("/attendance/:sessionId", protect, authorizeRoles("teacher"), getSessionAttendance);
-
-// ADVANCED REPORTING (New)
-// Teacher check kar sake ke kis student ki attendance kam hai
 router.get("/student-stats/:courseId", protect, authorizeRoles("teacher"), getStudentReportCard);
 
 module.exports = router;
