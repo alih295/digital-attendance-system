@@ -119,17 +119,64 @@ exports.deleteUser = async (req, res) => {
 // ---------------- 5. ENROLLMENT & ASSIGNMENT ----------------
 exports.enrollStudent = async (req, res) => {
   try {
-    const { studentId, courseId } = req.body;
-    const alreadyEnrolled = await Enrollment.findOne({ studentId, courseId });
-    if (alreadyEnrolled) return res.status(400).json({ message: "Student already enrolled" });
+    const { studentId, departmentId, semester } = req.body;
 
-    await Enrollment.create({ studentId, courseId });
-    res.json({ message: "Student enrolled successfully" });
+    // Validation check
+    if (!studentId || !departmentId || !semester) {
+      return res.status(400).json({ message: "Student, Department, and Semester are all required" });
+    }
+
+    // Aapke model me semester Number hai, isliye hum isko safe side base-10 integer me convert kar rahe hain
+    const targetSemester = parseInt(semester, 10);
+    if (isNaN(targetSemester)) {
+      return res.status(400).json({ message: "Semester must be a valid numeric value" });
+    }
+
+    // 1. Us specific department aur semester ke jitne courses hain unhe find karo (chahe unpar teacher assigned ho ya null ho)
+    const availableCourses = await Course.find({ 
+      departmentId, 
+      semester: targetSemester 
+    });
+
+    if (!availableCourses || availableCourses.length === 0) {
+      return res.status(404).json({ 
+        message: "No courses found matching this specific department and semester structural block." 
+      });
+    }
+
+    let enrolledCount = 0;
+    let skippedCount = 0;
+
+    // 2. Linear processing run karein: duplicate entry bypass block loop
+    for (const course of availableCourses) {
+      const alreadyEnrolled = await Enrollment.findOne({ studentId, courseId: course._id });
+      
+      if (!alreadyEnrolled) {
+        await Enrollment.create({ 
+          studentId, 
+          courseId: course._id 
+        });
+        enrolledCount++;
+      } else {
+        skippedCount++;
+      }
+    }
+
+    // 3. Responses mapping block layout structure
+    if (enrolledCount === 0) {
+      return res.status(400).json({ 
+        message: `Student was already enrolled in all ${skippedCount} courses of this semester.` 
+      });
+    }
+
+    res.json({ 
+      message: `Successfully batch enrolled student in ${enrolledCount} courses.${skippedCount > 0 ? ` (${skippedCount} already enrolled skipping system matches)` : ""}` 
+    });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 exports.assignTeacher = async (req, res) => {
   try {
     const { teacherId, courseId } = req.body;

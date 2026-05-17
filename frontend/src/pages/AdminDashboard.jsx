@@ -8,18 +8,18 @@ import API from "../api/api";
 // ============================================================
 //  INLINED ADMIN SERVICE FUNCTIONS (replaces adminService.js)
 // ============================================================
-const getStats          = async ()       => (await API.get("/admin/stats")).data;
-const createDepartment  = async (data)   => (await API.post("/admin/department", data)).data;
-const createCourse      = async (data)   => (await API.post("/admin/course", data)).data;
-const createUser        = async (data)   => (await API.post("/admin/user", data)).data;
-const getDepartments    = async ()       => (await API.get("/admin/departments")).data;
-const getTeachers       = async ()       => (await API.get("/admin/teachers")).data;
-const getStudents       = async ()       => (await API.get("/admin/students")).data;
-const getCourses        = async ()       => (await API.get("/admin/courses")).data;
-const assignTeacher     = async (data)   => (await API.post("/admin/assign-teacher", data)).data;
-const enrollStudent     = async (data)   => (await API.post("/admin/enroll", data)).data;
-const deleteUser        = async (userId) => (await API.delete(`/admin/user/${userId}`)).data;
-const getStudentReport  = async (sid)    => (await API.get(`/admin/student-report/${sid}`)).data;
+const getStats = async () => (await API.get("/admin/stats")).data;
+const createDepartment = async (data) => (await API.post("/admin/department", data)).data;
+const createCourse = async (data) => (await API.post("/admin/course", data)).data;
+const createUser = async (data) => (await API.post("/admin/user", data)).data;
+const getDepartments = async () => (await API.get("/admin/departments")).data;
+const getTeachers = async () => (await API.get("/admin/teachers")).data;
+const getStudents = async () => (await API.get("/admin/students")).data;
+const getCourses = async () => (await API.get("/admin/courses")).data;
+const assignTeacher = async (data) => (await API.post("/admin/assign-teacher", data)).data;
+const enrollStudent = async (data) => (await API.post("/admin/enroll", data)).data;
+const deleteUser = async (userId) => (await API.delete(`/admin/user/${userId}`)).data;
+const getStudentReport = async (sid) => (await API.get(`/admin/student-report/${sid}`)).data;
 // ============================================================
 
 export default function AdminDashboard() {
@@ -27,16 +27,16 @@ export default function AdminDashboard() {
   const { logout } = useAuth();
 
   // UI States
-  const [activeTab, setActiveTab]   = useState("overview");
-  const [loading, setLoading]       = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Data States
-  const [stats, setStats]           = useState({});
+  const [stats, setStats] = useState({});
   const [departments, setDepartments] = useState([]);
-  const [teachers, setTeachers]     = useState([]);
-  const [courses, setCourses]       = useState([]);
-  const [students, setStudents]     = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [students, setStudents] = useState([]);
 
   // Form States
   const [deptName, setDeptName] = useState("");
@@ -56,13 +56,13 @@ export default function AdminDashboard() {
   });
 
   // Delete User State
-  const [deleteUserId, setDeleteUserId]     = useState("");
-  const [deleteConfirm, setDeleteConfirm]   = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   // Student Report State
   const [reportStudentId, setReportStudentId] = useState("");
-  const [studentReport, setStudentReport]     = useState(null);
-  const [reportLoading, setReportLoading]     = useState(false);
+  const [studentReport, setStudentReport] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
 
   // ===================== SYNC DATA =====================
   const syncData = useCallback(async () => {
@@ -150,17 +150,30 @@ export default function AdminDashboard() {
 
   const handleEnroll = async (e) => {
     e.preventDefault();
-    if (!enrollData.studentId || !enrollData.courseId || !enrollData.semester || !enrollData.departmentId)
-      return toast.error("All enrollment fields are required");
+
+    if (!enrollData.studentId || !enrollData.departmentId || !enrollData.semester) {
+      return toast.error("Student, Department, and Semester are all required for batch enrollment");
+    }
+
     try {
       setSubmitting(true);
-      await enrollStudent(enrollData);
-      toast.success("Student enrolled successfully");
-      setEnrollData({ studentId: "", courseId: "", semester: "", departmentId: "" });
+
+      // Backend controller ko call karega jahan pure semester ke courses auto-enroll honge
+      const response = await enrollStudent(enrollData);
+
+      // Backend se aane wale dynamic success message ko show karega
+      toast.success(response?.message || "Student batch enrolled successfully");
+
+      // Form fields ko reset karega (courseId field payload se clear)
+      setEnrollData({ studentId: "", departmentId: "", semester: "" });
+
+      // Dashboard numbers aur states ko live sync karega
       await syncData();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Enrollment failed");
-    } finally { setSubmitting(false); }
+      toast.error(err.response?.data?.message || "Batch enrollment failed");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // ---- DELETE USER ----
@@ -200,444 +213,546 @@ export default function AdminDashboard() {
     finally { logout(); navigate("/"); }
   };
 
-  // ===================== STYLES =====================
-  const inputStyle  = "w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm transition-all placeholder:text-slate-400 bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-50 disabled:cursor-not-allowed";
-  const labelStyle  = "block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider";
-  const Spinner     = () => (
+  // ===================== DESATURATED GRAY COMPONENT UI STYLES =====================
+  const inputStyle = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all duration-150 disabled:bg-gray-100 disabled:cursor-not-allowed";
+  const labelStyle = "block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider";
+  const buttonStyle = "w-full bg-gray-900 text-white text-sm font-medium py-2.5 px-4 rounded-xl hover:bg-gray-800 active:bg-gray-900 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition duration-150 shadow-sm cursor-pointer flex items-center justify-center";
+
+  const Spinner = () => (
     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
     </svg>
   );
 
-  const allUsers = [...students, ...teachers];
-
   return (
-    <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans antialiased">
+    <div className="min-h-screen bg-gray-100 p-4 font-sans antialiased flex justify-center items-center">
 
-      {/* HEADER */}
-      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-50 shadow-xs backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm shadow-blue-500/20">A</div>
-            <div>
-              <h1 className="text-base font-bold text-slate-900 leading-none">Control Center</h1>
-              <span className="text-xs text-slate-500 font-medium">System Administrator</span>
+      {/* OUTER CANVAS SIDEBAR DASHBOARD CANVAS CONTAINER */}
+      <div className="w-full max-w-[1366px] min-h-[720px] bg-gray-800 p-4 rounded-[28px] shadow-2xl flex gap-4 border border-gray-700 overflow-hidden">
+
+        {/* SIDEBAR NAVIGATION MODULE */}
+        <aside className="w-64 flex flex-col justify-between p-4 shrink-0">
+          <div>
+            {/* Branding Logo */}
+            <div className="px-3 mb-8">
+              <h1 className="text-white font-bold text-lg tracking-tight">M - SoftTech</h1>
             </div>
+
+            {/* Navigation Tabs Layer */}
+            <nav className="space-y-1 relative">
+              {[
+                { id: "overview", label: "Overview", icon: "▢" },
+                { id: "users", label: "User Control", icon: "👤" },
+                { id: "courses", label: "Courses", icon: "▤" },
+                { id: "dept", label: "Departments", icon: "⚙" },
+                { id: "enroll", label: "Access Request", icon: "⚲" },
+                { id: "delete", label: "Delete User", icon: "✕" },
+                { id: "report", label: "Student Report", icon: "📋" },
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-300 relative cursor-pointer ${isActive
+                        ? "text-gray-900 bg-white rounded-l-2xl rounded-r-none translate-x-4 shadow-sm z-10"
+                        : "text-gray-400 hover:text-white rounded-lg hover:bg-gray-700/40"
+                      }`}
+                  >
+                    {isActive && (
+                      <>
+                        <div className="absolute right-4 top-[-16px] w-4 h-4 bg-transparent shadow-[4px_4px_0_0_#fff] rounded-br-full pointer-events-none" />
+                        <div className="absolute right-4 bottom-[-16px] w-4 h-4 bg-transparent shadow-[4px_-4px_0_0_#fff] rounded-tr-full pointer-events-none" />
+                      </>
+                    )}
+                    <span className="text-base leading-none opacity-80">{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100/80 active:bg-red-200 rounded-xl transition duration-200 gap-2 cursor-pointer"
-          >
-            Exit Dashboard
-          </button>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* TABS */}
-        <div className="flex p-1 bg-slate-200/80 rounded-xl mb-8 max-w-4xl overflow-x-auto shadow-xs border border-slate-200/40">
-          {[
-            { id: "overview", label: "Overview" },
-            { id: "users",    label: "User Management" },
-            { id: "courses",  label: "Courses" },
-            { id: "dept",     label: "Departments" },
-            { id: "enroll",   label: "Enrolment" },
-            { id: "delete",   label: "Delete User" },
-            { id: "report",   label: "Student Report" },
-          ].map((tab) => (
+          {/* Core Support Block */}
+          <div className="bg-gray-700/40 border border-gray-600/40 p-4 rounded-2xl flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/10 text-white font-bold text-xs p-2 rounded-xl border border-white/10">24/7</div>
+              <div>
+                <p className="text-xs font-semibold text-white">Support Core</p>
+                <p className="text-[10px] text-gray-400">System Ready</p>
+              </div>
+            </div>
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-[110px] text-center px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap cursor-pointer ${
-                activeTab === tab.id
-                  ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/40"
-              }`}
+              onClick={handleLogout}
+              className="text-gray-400 hover:text-red-400 transition-colors cursor-pointer text-xs p-1"
+              title="Exit Dashboard"
             >
-              {tab.label}
+              Quit ⤤
             </button>
-          ))}
-        </div>
-
-        {/* LOADING INDICATOR */}
-        {loading && (
-          <div className="mb-6 flex items-center gap-3 bg-white border border-blue-100 p-3.5 rounded-xl text-xs sm:text-sm text-blue-700 shadow-xs">
-            <div className="flex space-x-1.5 items-center">
-              {[0, 150, 300].map((d) => (
-                <div key={d} className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
-              ))}
-            </div>
-            <p className="font-medium">Fetching real-time university metrics...</p>
           </div>
-        )}
+        </aside>
 
-        {/* ===== OVERVIEW ===== */}
-        {activeTab === "overview" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              { title: "Total Enrolled Students", value: stats.students,    desc: "Active profiles",    color: "from-blue-500 to-cyan-500" },
-              { title: "Academic Faculty",         value: stats.teachers,    desc: "Verified educators", color: "from-indigo-500 to-purple-500" },
-              { title: "Registered Departments",   value: stats.departments, desc: "Operational wings",  color: "from-emerald-500 to-teal-500" },
-              { title: "Approved Courses",         value: stats.courses,     desc: "Syllabus active",    color: "from-amber-500 to-orange-500" },
-            ].map((card, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm relative overflow-hidden">
-                <div className={`absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r ${card.color}`} />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{card.title}</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold tracking-tight text-slate-800">{loading ? "..." : (card.value || 0)}</p>
-                  <span className="text-xs text-slate-400 font-medium">{card.desc}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* MAIN DASHBOARD WHITE MAIN LAYER */}
+        <main className="flex-1 bg-white rounded-[22px] p-8 flex flex-col overflow-y-auto">
 
-        {/* ===== USERS ===== */}
-        {activeTab === "users" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
-            {/* Create User */}
-            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200/80">
-              <div className="mb-5">
-                <h2 className="text-lg font-bold text-slate-900">Account Provisioning</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Register new student credentials or faculty access layers.</p>
-              </div>
-              <form onSubmit={handleUser} className="space-y-4">
-                <div>
-                  <label className={labelStyle}>Full Name</label>
-                  <input type="text" disabled={submitting} placeholder="e.g. Dr. Sarah Jenkins" className={inputStyle}
-                    value={userData.name} onChange={(e) => setUserData({ ...userData, name: e.target.value })} />
-                </div>
-                <div>
-                  <label className={labelStyle}>Official Email</label>
-                  <input type="email" disabled={submitting} placeholder="username@university.edu" className={inputStyle}
-                    value={userData.email} onChange={(e) => setUserData({ ...userData, email: e.target.value })} />
-                </div>
-                <div>
-                  <label className={labelStyle}>Temporary Password</label>
-                  <input type="password" disabled={submitting} placeholder="••••••••" className={inputStyle}
-                    value={userData.password} onChange={(e) => setUserData({ ...userData, password: e.target.value })} />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelStyle}>Account Role</label>
-                    <select disabled={submitting} className={inputStyle} value={userData.role}
-                      onChange={(e) => setUserData({ ...userData, role: e.target.value })}>
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelStyle}>Department</label>
-                    <select disabled={submitting} className={inputStyle} value={userData.departmentId}
-                      onChange={(e) => setUserData({ ...userData, departmentId: e.target.value })}>
-                      <option value="">Select Wing</option>
-                      {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <button type="submit" disabled={submitting}
-                  className="w-full bg-blue-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition duration-150 shadow-sm mt-2 cursor-pointer">
-                  {submitting ? <><Spinner />Saving Profile...</> : "Generate Account"}
-                </button>
-              </form>
+          {/* CONTROL CENTER LAYER HEADER */}
+          <div className="flex justify-between items-center pb-6 border-b border-gray-100 mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 capitalize">{activeTab} Control Layer</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Management System / Central Node</p>
             </div>
-
-            {/* Assign Teacher */}
-            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200/80">
-              <div className="mb-5">
-                <h2 className="text-lg font-bold text-slate-900">Course Allocation</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Map authorized instructors to approved curriculum modules.</p>
-              </div>
-              <form onSubmit={handleAssign} className="space-y-4">
-                <div>
-                  <label className={labelStyle}>Assign Instructor</label>
-                  <select disabled={submitting} className={inputStyle} value={assignData.teacherId}
-                    onChange={(e) => setAssignData({ ...assignData, teacherId: e.target.value })}>
-                    <option value="">Select Teacher Profile</option>
-                    {teachers.map((t) => <option key={t._id} value={t._id}>{t.name} ({t.email})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelStyle}>Target Course Unit</label>
-                  <select disabled={submitting} className={inputStyle} value={assignData.courseId}
-                    onChange={(e) => setAssignData({ ...assignData, courseId: e.target.value })}>
-                    <option value="">Select Module</option>
-                    {courses.map((c) => <option key={c._id} value={c._id}>{c.name} — [{c.code}]</option>)}
-                  </select>
-                </div>
-                <button type="submit" disabled={submitting}
-                  className="w-full bg-indigo-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-70 disabled:cursor-not-allowed transition duration-150 shadow-sm mt-2 cursor-pointer">
-                  {submitting ? <><Spinner />Mapping Structure...</> : "Authorize Course Mapping"}
-                </button>
-              </form>
+            <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+              <div className="h-7 w-7 rounded-full bg-gray-900 flex items-center justify-center text-white text-[10px] font-bold">AD</div>
+              <span className="text-xs font-medium text-gray-700">Manoj Adhikari</span>
             </div>
           </div>
-        )}
 
-        {/* ===== COURSES ===== */}
-        {activeTab === "courses" && (
-          <div className="max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200/80 mx-auto">
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-slate-900">Curriculum Creation</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Inject verified course structures into the academic matrix.</p>
+          {/* LOADER SYNC NOTIFICATION BANNER */}
+          {loading && (
+            <div className="mb-6 flex items-center gap-3 bg-gray-50 border border-gray-200 p-4 rounded-xl text-xs text-gray-600 animate-pulse">
+              <span className="inline-block h-2 w-2 rounded-full bg-gray-900" />
+              <p className="font-medium">Fetching real-time metrics data from the university core database...</p>
             </div>
-            <form onSubmit={handleCourse} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2">
-                  <label className={labelStyle}>Course Name</label>
-                  <input type="text" disabled={submitting} placeholder="Data Structures & Algorithms" className={inputStyle}
-                    value={courseData.name} onChange={(e) => setCourseData({ ...courseData, name: e.target.value })} />
-                </div>
-                <div>
-                  <label className={labelStyle}>Course Code</label>
-                  <input type="text" disabled={submitting} placeholder="CS-202" className={inputStyle}
-                    value={courseData.code} onChange={(e) => setCourseData({ ...courseData, code: e.target.value })} />
-                </div>
-              </div>
-              <div>
-                <label className={labelStyle}>Target Semester</label>
-                <input type="text" disabled={submitting} placeholder="e.g. Spring 2026 / 3rd" className={inputStyle}
-                  value={courseData.semester} onChange={(e) => setCourseData({ ...courseData, semester: e.target.value })} />
-              </div>
-              <div>
-                <label className={labelStyle}>Hosting Department</label>
-                <select disabled={submitting} className={inputStyle} value={courseData.departmentId}
-                  onChange={(e) => setCourseData({ ...courseData, departmentId: e.target.value })}>
-                  <option value="">Select Academic Branch</option>
-                  {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
-                </select>
-              </div>
-              <button type="submit" disabled={submitting}
-                className="w-full bg-blue-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition duration-150 shadow-sm mt-2 cursor-pointer">
-                {submitting ? <><Spinner />Publishing Block...</> : "Launch Course Module"}
-              </button>
-            </form>
-          </div>
-        )}
+          )}
 
-        {/* ===== DEPARTMENTS ===== */}
-        {activeTab === "dept" && (
-          <div className="max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200/80 mx-auto">
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-slate-900">Department Governance</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Establish legal institutional faculties and resource clusters.</p>
-            </div>
-            <form onSubmit={handleDept} className="space-y-4">
-              <div>
-                <label className={labelStyle}>Full Department Name</label>
-                <input type="text" disabled={submitting} placeholder="Department of Artificial Intelligence" className={inputStyle}
-                  value={deptName} onChange={(e) => setDeptName(e.target.value)} />
-              </div>
-              <button type="submit" disabled={submitting}
-                className="w-full bg-blue-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition duration-150 shadow-sm mt-2 cursor-pointer">
-                {submitting ? <><Spinner />Registering...</> : "Deploy Faculty Department"}
-              </button>
-            </form>
-          </div>
-        )}
+          {/* DATA INTERFACE OUTPUT CONTROLLERS */}
+          <div className="flex-1">
 
-        {/* ===== ENROLMENT ===== */}
-        {activeTab === "enroll" && (
-          <div className="max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200/80 mx-auto">
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-slate-900">Student Enrollment Ledger</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Securely process core ledger enrollment assignments for students.</p>
-            </div>
-            <form onSubmit={handleEnroll} className="space-y-4">
-              <div>
-                <label className={labelStyle}>Target Student</label>
-                <select disabled={submitting} className={inputStyle} value={enrollData.studentId}
-                  onChange={(e) => setEnrollData({ ...enrollData, studentId: e.target.value })}>
-                  <option value="">Select Enrolling Student</option>
-                  {students.map((s) => <option key={s._id} value={s._id}>{s.name} ({s.email})</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelStyle}>Destination Faculty</label>
-                  <select disabled={submitting} className={inputStyle} value={enrollData.departmentId}
-                    onChange={(e) => setEnrollData({ ...enrollData, departmentId: e.target.value })}>
-                    <option value="">Choose Department</option>
-                    {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelStyle}>Selected Course</label>
-                  <select disabled={submitting} className={inputStyle} value={enrollData.courseId}
-                    onChange={(e) => setEnrollData({ ...enrollData, courseId: e.target.value })}>
-                    <option value="">Choose Course</option>
-                    {courses.map((c) => <option key={c._id} value={c._id}>{c.name} [{c.code}]</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className={labelStyle}>Active Registration Semester</label>
-                <input type="text" disabled={submitting} placeholder="e.g. 4th Semester" className={inputStyle}
-                  value={enrollData.semester} onChange={(e) => setEnrollData({ ...enrollData, semester: e.target.value })} />
-              </div>
-              <button type="submit" disabled={submitting}
-                className="w-full bg-emerald-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-70 disabled:cursor-not-allowed transition duration-150 shadow-sm mt-2 cursor-pointer">
-                {submitting ? <><Spinner />Enrolling Account...</> : "Verify & Commit Enrollment"}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* ===== DELETE USER ===== */}
-        {activeTab === "delete" && (
-          <div className="max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-red-100 mx-auto">
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-red-700">Delete User Account</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Permanently remove a student or faculty account from the system. This action cannot be undone.</p>
-            </div>
-            <form onSubmit={handleDeleteUser} className="space-y-4">
-              <div>
-                <label className={labelStyle}>Select User to Delete</label>
-                <select disabled={submitting} className={inputStyle} value={deleteUserId}
-                  onChange={(e) => { setDeleteUserId(e.target.value); setDeleteConfirm(false); }}>
-                  <option value="">— Choose a user —</option>
-                  <optgroup label="Students">
-                    {students.map((s) => <option key={s._id} value={s._id}>{s.name} ({s.email})</option>)}
-                  </optgroup>
-                  <optgroup label="Teachers">
-                    {teachers.map((t) => <option key={t._id} value={t._id}>{t.name} ({t.email})</option>)}
-                  </optgroup>
-                </select>
-              </div>
-
-              {deleteUserId && (
-                <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
-                  <input
-                    id="confirm-delete"
-                    type="checkbox"
-                    className="mt-0.5 h-4 w-4 accent-red-600 cursor-pointer"
-                    checked={deleteConfirm}
-                    onChange={(e) => setDeleteConfirm(e.target.checked)}
-                  />
-                  <label htmlFor="confirm-delete" className="text-xs text-red-700 font-medium leading-snug cursor-pointer">
-                    I understand this will <strong>permanently delete</strong> the selected user and all associated data. This action is irreversible.
-                  </label>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting || !deleteUserId || !deleteConfirm}
-                className="w-full bg-red-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-red-700 active:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 shadow-sm mt-2 cursor-pointer"
-              >
-                {submitting ? <><Spinner />Deleting Account...</> : "Permanently Delete User"}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* ===== STUDENT REPORT ===== */}
-        {activeTab === "report" && (
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200/80">
-              <div className="mb-5">
-                <h2 className="text-lg font-bold text-slate-900">Student Report</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Retrieve a full academic report for any enrolled student.</p>
-              </div>
-              <form onSubmit={handleGetReport} className="space-y-4">
-                <div>
-                  <label className={labelStyle}>Select Student</label>
-                  <select disabled={reportLoading} className={inputStyle} value={reportStudentId}
-                    onChange={(e) => { setReportStudentId(e.target.value); setStudentReport(null); }}>
-                    <option value="">— Choose a student —</option>
-                    {students.map((s) => <option key={s._id} value={s._id}>{s.name} ({s.email})</option>)}
-                  </select>
-                </div>
-                <button type="submit" disabled={reportLoading || !reportStudentId}
-                  className="w-full bg-violet-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-violet-700 active:bg-violet-800 disabled:opacity-70 disabled:cursor-not-allowed transition duration-150 shadow-sm mt-2 cursor-pointer">
-                  {reportLoading ? <><Spinner />Generating Report...</> : "Generate Student Report"}
-                </button>
-              </form>
-            </div>
-
-            {/* Report Output */}
-            {studentReport && (
-              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200/80 space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900">{studentReport.name || "Student"}</h3>
-                    <p className="text-xs text-slate-500">{studentReport.email}</p>
-                  </div>
-                  <span className="text-xs font-semibold bg-violet-100 text-violet-700 px-3 py-1 rounded-full">Academic Report</span>
+            {/* ===== OVERVIEW INDEX MODULE ===== */}
+            {activeTab === "overview" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {[
+                    { title: "Sales / Enrolled", value: stats.students, desc: "Active profiles registered" },
+                    { title: "Purchases / Faculty", value: stats.teachers, desc: "Verified system instructors" },
+                    { title: "Orders / Courses", value: stats.courses, desc: "Syllabus active modules" },
+                  ].map((card, idx) => (
+                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-2xl p-6 relative overflow-hidden">
+                      <div className="absolute top-4 right-4 text-xs font-mono bg-white border border-gray-200 px-2 py-0.5 rounded-md text-gray-400">↗</div>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{card.title}</p>
+                      <p className="text-3xl font-bold text-gray-900 tracking-tight">{loading ? "..." : (card.value || 0)}</p>
+                      <span className="text-[11px] text-gray-400 block mt-1.5 font-medium">{card.desc}</span>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Department */}
-                {studentReport.department && (
-                  <div>
-                    <p className={labelStyle}>Department</p>
-                    <p className="text-sm text-slate-700">{studentReport.department?.name || studentReport.department}</p>
-                  </div>
-                )}
-
-                {/* Enrolled Courses */}
-                {studentReport.enrolledCourses?.length > 0 && (
-                  <div>
-                    <p className={labelStyle}>Enrolled Courses</p>
-                    <div className="space-y-2 mt-1">
-                      {studentReport.enrolledCourses.map((c, i) => (
-                        <div key={i} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2.5 text-sm">
-                          <span className="font-medium text-slate-800">{c.name || c}</span>
-                          {c.code && <span className="text-xs text-slate-500 font-mono">{c.code}</span>}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pt-2">
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Overview / System Units</h3>
+                      <span className="text-[11px] font-medium bg-white px-2 py-0.5 border border-gray-200 rounded text-gray-500">Live</span>
+                    </div>
+                    <div className="space-y-2">
+                      {[
+                        { label: "Registered Departments", count: stats.departments },
+                        { label: "Approved Course Units", count: stats.courses },
+                        { label: "Faculty Members Total", count: stats.teachers },
+                        { label: "Student Profiles Safe", count: stats.students },
+                      ].map((item, index) => (
+                        <div key={index} className={`flex justify-between items-center p-3 rounded-lg border text-xs ${index === 0 ? 'bg-gray-900 text-white border-transparent' : 'bg-white border-gray-200 text-gray-700'}`}>
+                          <span>{item.label}</span>
+                          <span className="font-bold">{loading ? ".." : (item.count || 0)}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                )}
 
-                {/* Grades / Marks — render whatever keys the API sends */}
-                {studentReport.grades?.length > 0 && (
-                  <div>
-                    <p className={labelStyle}>Grades</p>
-                    <div className="overflow-x-auto rounded-xl border border-slate-200">
-                      <table className="w-full text-sm">
-                        <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          <tr>
-                            {Object.keys(studentReport.grades[0]).map((k) => (
-                              <th key={k} className="px-4 py-2.5 text-left">{k}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {studentReport.grades.map((row, i) => (
-                            <tr key={i} className="hover:bg-slate-50 transition-colors">
-                              {Object.values(row).map((v, j) => (
-                                <td key={j} className="px-4 py-2.5 text-slate-700">{String(v)}</td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 flex flex-col justify-between">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Total Allocation Status</h3>
+                      <span className="text-[11px] text-gray-400">Live Engine</span>
+                    </div>
+                    <div className="my-6 flex items-center justify-center">
+                      <div className="h-28 w-28 rounded-full border-8 border-gray-200 flex items-center justify-center border-t-gray-900">
+                        <span className="text-xl font-bold text-gray-900 tracking-tight">70%</span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-gray-400 text-center font-medium">Optimal system data saturation status achieved.</p>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">System Activity Feed</h3>
+                      <span className="text-[11px] text-gray-400">Logs</span>
+                    </div>
+                    <div className="space-y-3">
+                      {["Yellow status update log info", "Red status database write complete", "Green process allocation request"].map((text, i) => (
+                        <div key={i} className="flex gap-2.5 items-start text-xs text-gray-600">
+                          <span className={`h-2 w-2 rounded-full mt-1 shrink-0 ${i === 1 ? 'bg-red-400' : i === 2 ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                          <p className="line-clamp-2 leading-relaxed"><strong>{text}</strong>: Core system metrics matrix allocation layer parameters processed successfully.</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                )}
-
-                {/* Raw fallback for any other fields */}
-                {Object.keys(studentReport)
-                  .filter((k) => !["name", "email", "department", "enrolledCourses", "grades"].includes(k))
-                  .map((k) => (
-                    <div key={k}>
-                      <p className={labelStyle}>{k}</p>
-                      <p className="text-sm text-slate-700">
-                        {typeof studentReport[k] === "object"
-                          ? JSON.stringify(studentReport[k], null, 2)
-                          : String(studentReport[k])}
-                      </p>
-                    </div>
-                  ))}
+                </div>
               </div>
             )}
-          </div>
-        )}
 
-      </main>
+            {/* ===== USER MANAGEMENT ACTIONS ===== */}
+            {activeTab === "users" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+                  <div className="mb-5">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Account Provisioning</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Register new students or credentialed faculty layers.</p>
+                  </div>
+                  <form onSubmit={handleUser} className="space-y-4">
+                    <div>
+                      <label className={labelStyle}>Full Name</label>
+                      <input type="text" disabled={submitting} placeholder="e.g. Dr. Sarah Jenkins" className={inputStyle}
+                        value={userData.name} onChange={(e) => setUserData({ ...userData, name: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Official Email Address</label>
+                      <input type="email" disabled={submitting} placeholder="username@university.edu" className={inputStyle}
+                        value={userData.email} onChange={(e) => setUserData({ ...userData, email: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Temporary Password</label>
+                      <input type="password" disabled={submitting} placeholder="••••••••" className={inputStyle}
+                        value={userData.password} onChange={(e) => setUserData({ ...userData, password: e.target.value })} />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelStyle}>Account Role</label>
+                        <select disabled={submitting} className={inputStyle} value={userData.role}
+                          onChange={(e) => setUserData({ ...userData, role: e.target.value })}>
+                          <option value="student">Student</option>
+                          <option value="teacher">Teacher</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelStyle}>Assigned Department</label>
+                        <select disabled={submitting} className={inputStyle} value={userData.departmentId}
+                          onChange={(e) => setUserData({ ...userData, departmentId: e.target.value })}>
+                          <option value="">Select Wing</option>
+                          {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <button type="submit" disabled={submitting} className={buttonStyle}>
+                      {submitting ? <><Spinner />Saving Profile...</> : "Generate Account"}
+                    </button>
+                  </form>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+                  <div className="mb-5">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Course Allocation</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Map authorized instructors to approved curriculum modules.</p>
+                  </div>
+                  <form onSubmit={handleAssign} className="space-y-4">
+                    <div>
+                      <label className={labelStyle}>Assign Instructor</label>
+                      <select disabled={submitting} className={inputStyle} value={assignData.teacherId}
+                        onChange={(e) => setAssignData({ ...assignData, teacherId: e.target.value })}>
+                        <option value="">Select Teacher Profile</option>
+                        {teachers.map((t) => <option key={t._id} value={t._id}>{t.name} ({t.email})</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Target Course Unit</label>
+                      <select disabled={submitting} className={inputStyle} value={assignData.courseId}
+                        onChange={(e) => setAssignData({ ...assignData, courseId: e.target.value })}>
+                        <option value="">Select Module</option>
+                        {courses.map((c) => <option key={c._id} value={c._id}>{c.name} — [{c.code}]</option>)}
+                      </select>
+                    </div>
+                    <button type="submit" disabled={submitting} className={buttonStyle}>
+                      {submitting ? <><Spinner />Mapping Structure...</> : "Authorize Course Mapping"}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* ===== CURRICULUM CREATION BLOCK ===== */}
+            {activeTab === "courses" && (
+              <div className="max-w-xl bg-white p-6 rounded-2xl border border-gray-200 mx-auto">
+                <div className="mb-5">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Curriculum Creation</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Inject verified course structures into the academic matrix.</p>
+                </div>
+                <form onSubmit={handleCourse} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className={labelStyle}>Course Name</label>
+                      <input type="text" disabled={submitting} placeholder="Data Structures & Algorithms" className={inputStyle}
+                        value={courseData.name} onChange={(e) => setCourseData({ ...courseData, name: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Course Code</label>
+                      <input type="text" disabled={submitting} placeholder="CS-202" className={inputStyle}
+                        value={courseData.code} onChange={(e) => setCourseData({ ...courseData, code: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelStyle}>Target Semester</label>
+                    <input type="text" disabled={submitting} placeholder="e.g. Spring 2026" className={inputStyle}
+                      value={courseData.semester} onChange={(e) => setCourseData({ ...courseData, semester: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className={labelStyle}>Hosting Department</label>
+                    <select disabled={submitting} className={inputStyle} value={courseData.departmentId}
+                      onChange={(e) => setCourseData({ ...courseData, departmentId: e.target.value })}>
+                      <option value="">Select Academic Branch</option>
+                      {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                  <button type="submit" disabled={submitting} className={buttonStyle}>
+                    {submitting ? <><Spinner />Publishing Block...</> : "Launch Course Module"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* ===== DEPARTMENT GOVERNANCE BLOCK ===== */}
+            {activeTab === "dept" && (
+              <div className="max-w-xl bg-white p-6 rounded-2xl border border-gray-200 mx-auto">
+                <div className="mb-5">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Department Governance</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Establish official institutional faculties and resource clusters.</p>
+                </div>
+                <form onSubmit={handleDept} className="space-y-4">
+                  <div>
+                    <label className={labelStyle}>Full Department Name</label>
+                    <input type="text" disabled={submitting} placeholder="Department of Artificial Intelligence" className={inputStyle}
+                      value={deptName} onChange={(e) => setDeptName(e.target.value)} />
+                  </div>
+                  <button type="submit" disabled={submitting} className={buttonStyle}>
+                    {submitting ? <><Spinner />Registering...</> : "Deploy Faculty Department"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* ===== STUDENT LEDGER ENROLLMENT ACCESS ===== */}
+            {activeTab === "enroll" && (
+              <div className="max-w-xl bg-white p-6 rounded-2xl border border-gray-200 mx-auto">
+                <div className="mb-5">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Smart Batch Enrollment Ledger</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Student ka semester aur department select karein. System us block ke saare subjects auto-enroll kar dega.
+                  </p>
+                </div>
+
+                <form onSubmit={handleEnroll} className="space-y-4">
+                  {/* Student Identity Selector */}
+                  <div>
+                    <label className={labelStyle}>Target Student Profile</label>
+                    <select
+                      disabled={submitting}
+                      className={inputStyle}
+                      value={enrollData.studentId}
+                      onChange={(e) => setEnrollData({ ...enrollData, studentId: e.target.value })}
+                    >
+                      <option value="">Select Enrolling Student</option>
+                      {students.map((s) => (
+                        <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Destination Department */}
+                    <div>
+                      <label className={labelStyle}>Destination Department</label>
+                      <select
+                        disabled={submitting}
+                        className={inputStyle}
+                        value={enrollData.departmentId}
+                        onChange={(e) => setEnrollData({ ...enrollData, departmentId: e.target.value })}
+                      >
+                        <option value="">Choose Department</option>
+                        {departments.map((d) => (
+                          <option key={d._id} value={d._id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Target Semester (Numeric matching backend parseInt) */}
+                    <div>
+                      <label className={labelStyle}>Target Semester Number</label>
+                      <input
+                        type="number"
+                        disabled={submitting}
+                        placeholder="e.g. 7"
+                        className={inputStyle}
+                        min="1"
+                        max="12"
+                        value={enrollData.semester}
+                        onChange={(e) => setEnrollData({ ...enrollData, semester: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Form Action Execution Control Button */}
+                  <button type="submit" disabled={submitting} className={buttonStyle}>
+                    {submitting ? (
+                      <>
+                        <Spinner />
+                        Processing Bulk Semester Grid Enrollment...
+                      </>
+                    ) : (
+                      "Verify & Batch Enroll Student"
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* ===== ACCOUNT TERMINATION TERMINAL ===== */}
+            {activeTab === "delete" && (
+              <div className="max-w-xl bg-white p-6 rounded-2xl border border-red-200 mx-auto bg-red-50/20">
+                <div className="mb-5">
+                  <h3 className="text-sm font-bold text-red-900 uppercase tracking-wider">Terminate User System Access</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Permanently purge structural student or faculty access tokens. This action is critical and absolute.</p>
+                </div>
+                <form onSubmit={handleDeleteUser} className="space-y-4">
+                  <div>
+                    <label className={labelStyle}>Select Targeted User Profile</label>
+                    <select disabled={submitting} className={inputStyle} value={deleteUserId}
+                      onChange={(e) => { setDeleteUserId(e.target.value); setDeleteConfirm(false); }}>
+                      <option value="">— Choose profile —</option>
+                      <optgroup label="Students Engine">
+                        {students.map((s) => <option key={s._id} value={s._id}>{s.name} ({s.email})</option>)}
+                      </optgroup>
+                      <optgroup label="Faculty Structure">
+                        {teachers.map((t) => <option key={t._id} value={t._id}>{t.name} ({t.email})</option>)}
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  {deleteUserId && (
+                    <div className="flex items-start gap-3 bg-white border border-red-200 rounded-xl p-4 shadow-sm">
+                      <input
+                        id="confirm-delete"
+                        type="checkbox"
+                        className="mt-0.5 h-4 w-4 accent-gray-900 border-gray-300 rounded cursor-pointer"
+                        checked={deleteConfirm}
+                        onChange={(e) => setDeleteConfirm(e.target.checked)}
+                      />
+                      <label htmlFor="confirm-delete" className="text-xs text-gray-600 font-medium leading-snug cursor-pointer">
+                        I authorize the permanent deletion of the selected account. All linked course history records and metrics keys will be destroyed.
+                      </label>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={submitting || !deleteUserId || !deleteConfirm}
+                    className="w-full bg-red-600 text-white text-sm font-medium py-2.5 px-4 rounded-xl hover:bg-red-700 active:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed transition duration-150 shadow-sm cursor-pointer flex items-center justify-center"
+                  >
+                    {submitting ? <><Spinner />Purging Profile Token...</> : "Confirm Deletion Purge"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* ===== STUDENT ACADEMIC REPORTS ENGINE ===== */}
+            {activeTab === "report" && (
+              <div className="max-w-2xl mx-auto space-y-6">
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+                  <div className="mb-5">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Student Academic Report Ledger</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Query and compile student performance index records into data read sheets.</p>
+                  </div>
+                  <form onSubmit={handleGetReport} className="space-y-4">
+                    <div>
+                      <label className={labelStyle}>Target Student Identity Selector</label>
+                      <select disabled={reportLoading} className={inputStyle} value={reportStudentId}
+                        onChange={(e) => { setReportStudentId(e.target.value); setStudentReport(null); }}>
+                        <option value="">— Choose student record —</option>
+                        {students.map((s) => <option key={s._id} value={s._id}>{s.name} ({s.email})</option>)}
+                      </select>
+                    </div>
+                    <button type="submit" disabled={reportLoading || !reportStudentId} className={buttonStyle}>
+                      {reportLoading ? <><Spinner />Compiling Data...</> : "Query Student Metrics"}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Report Content Dynamic View Output */}
+                {studentReport && (
+                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-5 animate-fadeIn">
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+                      <div>
+                        <h4 className="text-base font-bold text-gray-900">{studentReport.name || "Student Profile View"}</h4>
+                        <p className="text-xs text-gray-400 font-mono mt-0.5">{studentReport.email}</p>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-900 text-white px-2.5 py-1 rounded-md">Compiled Ledger Data</span>
+                    </div>
+
+                    {studentReport.department && (
+                      <div>
+                        <p className={labelStyle}>Department Node Branch</p>
+                        <p className="text-sm text-gray-900 font-medium">{studentReport.department?.name || studentReport.department}</p>
+                      </div>
+                    )}
+
+                    {studentReport.enrolledCourses?.length > 0 && (
+                      <div>
+                        <p className={labelStyle}>Enrolled Active Courses Spectrum</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                          {studentReport.enrolledCourses.map((c, i) => (
+                            <div key={i} className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 text-xs">
+                              <span className="font-semibold text-gray-900">{c.name || c}</span>
+                              {c.code && <span className="text-[10px] text-gray-400 font-mono border border-gray-100 bg-gray-50 px-1.5 py-0.5 rounded">{c.code}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ===== MERGED GRADES / MARKS TABLES LAYER ===== */}
+                    {studentReport.grades?.length > 0 && (
+                      <div>
+                        <p className={labelStyle}>Grades Ledger Matrix</p>
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white mt-2">
+                          <table className="w-full text-xs">
+                            <thead className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                              <tr>
+                                {Object.keys(studentReport.grades[0]).map((k) => (
+                                  <th key={k} className="px-4 py-3 text-left font-semibold">{k}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {studentReport.grades.map((row, i) => (
+                                <tr key={i} className="hover:bg-gray-50/80 transition-colors">
+                                  {Object.values(row).map((v, j) => (
+                                    <td key={j} className="px-4 py-3 text-gray-700 font-medium">{String(v)}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ===== MERGED DYNAMIC OBJECT PARAMETERS FALLBACK ===== */}
+                    {Object.keys(studentReport)
+                      .filter((k) => !["name", "email", "department", "enrolledCourses", "grades"].includes(k))
+                      .map((k) => (
+                        <div key={k} className="border-t border-gray-200/60 pt-3">
+                          <p className={labelStyle}>{k}</p>
+                          <div className="text-xs bg-white border border-gray-200 rounded-xl p-3 text-gray-700 font-mono whitespace-pre-wrap">
+                            {typeof studentReport[k] === "object"
+                              ? JSON.stringify(studentReport[k], null, 2)
+                              : String(studentReport[k])}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
