@@ -236,7 +236,7 @@ export default function AdminDashboard() {
           <div>
             {/* Branding Logo */}
             <div className="px-3 mb-8">
-              <h1 className="text-white font-bold text-lg tracking-tight">M - SoftTech</h1>
+              <h1 className="text-white font-bold text-lg tracking-tight">DAS</h1>
             </div>
 
             {/* Navigation Tabs Layer */}
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
               <div className="h-7 w-7 rounded-full bg-gray-900 flex items-center justify-center text-white text-[10px] font-bold">AD</div>
-              <span className="text-xs font-medium text-gray-700">Manoj Adhikari</span>
+              <span className="text-xs font-medium text-gray-700">Admin</span>
             </div>
           </div>
 
@@ -324,9 +324,9 @@ export default function AdminDashboard() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   {[
-                    { title: "Sales / Enrolled", value: stats.students, desc: "Active profiles registered" },
-                    { title: "Purchases / Faculty", value: stats.teachers, desc: "Verified system instructors" },
-                    { title: "Orders / Courses", value: stats.courses, desc: "Syllabus active modules" },
+                    { title: "Enrolled", value: stats.students, desc: "Active profiles registered" },
+                    { title: " Faculty", value: stats.teachers, desc: "Verified system instructors" },
+                    { title: "Courses", value: stats.courses, desc: "Syllabus active modules" },
                   ].map((card, idx) => (
                     <div key={idx} className="bg-gray-50 border border-gray-200 rounded-2xl p-6 relative overflow-hidden">
                       <div className="absolute top-4 right-4 text-xs font-mono bg-white border border-gray-200 px-2 py-0.5 rounded-md text-gray-400">↗</div>
