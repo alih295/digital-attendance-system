@@ -306,7 +306,6 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
               <div className="h-7 w-7 rounded-full bg-gray-900 flex items-center justify-center text-white text-[10px] font-bold">AD</div>
               <span className="text-xs font-medium text-gray-700">Admin</span>
-              <span className="text-xs font-medium text-gray-700">Ali Haider</span>
             </div>
           </div>
 
